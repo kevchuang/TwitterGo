@@ -1,0 +1,51 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="/public/css/feed.css">
+    <link rel="stylesheet" type="text/css" href="/public/css/styles.css">
+</head>
+
+<body>
+
+  <div class="main-div">
+      <div class="top-div">
+        <a href="/feed"><img src="/public/img/logo_little.png" id="logo"></a>
+        <form title="post-form" action="search" method="post" id="form-search">
+          <input type="text" name="search-content" placeholder="Look for an user">
+          <input type="submit" value="Search" name="postbutton">
+        </form>
+        <div class="topdiv-links">
+          <a href="/profile/{{ .User_id }}" id="profileLink">Profile</a>
+          <a href="/settings" id="accountLink">Settings</a>
+          <a href="/logout" id="logoutLink">Logout</a>
+        </div>
+      </div>
+
+      <div class="left-div">
+        <div class="inputs">
+          <form title="post-form" action="add_post" method="post">
+            <input type="text" name="post-content" placeholder="What do you wanna say?" id="postContent">
+            <input type="submit" value="Post!" name="postbutton" id="postButton">
+          </form>
+        </div>
+      </div>
+
+      <div class="mid-div">
+        {{range .Posts}}
+        <div class="post">
+            <img class="post-useravatar" src="/public/img/avatar.png">
+            <span class="post-username">Nickname</span>
+            <span class="post-content">{{ .Content }}</span>
+            <span class="post-date">{{ .Date }}</span>
+            <a class="post-like" href="/like/{{ .Post_id }}">Like <span>{{ .Nb_of_likes }}</span></a>
+            <a class="post-comment" href="/post/{{ .Post_id }}">Comment <span>X</span></a>
+        </div>
+        {{end}}
+  </div>
+
+</div>
+
+<div class="footer">
+  <span>BJTU Twitterlike application ~ Software Project Management 1</span><br/>
+  <span>Louis CHAUMIER, Kévin CHUANG, Sylvain BIRUKOFF</span>
+</div>
+
+</body>

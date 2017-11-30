@@ -1,0 +1,48 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="/public/css/profile.css">
+    <link rel="stylesheet" type="text/css" href="/public/css/styles.css">
+</head>
+
+<body>
+
+<div class="top-div">
+    <div class="topdiv-links">
+        <a href="/feed" id="feedLink">Feed</a>
+        <a href="/profile/{{ .User_id }}" id="profileLink">Profile</a>
+        <a href="/settings" id="accountLink">Settings</a>
+        <a href="/logout" id="logoutLink">Logout</a>
+    </div>
+</div>
+
+<div class="main-div">
+    <div class="userprofile">
+        <div class="top-userprofile">
+            <div class="topleft-userprofile">
+                <span id="useravatar"><img src="/public/img/avatar.png"></span>
+            </div>
+            <div class="topright-userprofile">
+                <span id="username">{{ .User.Nickname }}</span><br/>
+                <span id="usermail">{{ .User.Mail }}</span>
+            </div>
+        </div>
+        <div class="mid-userprofile">
+            <a href="/list_following/{{ .User.User_id }}">Following({{ .User.Nb_follow }})</a><br/>
+            <a href="/list_followers/{{ .User.User_id }}">Followers</a><br/>
+            <a href="/follow/{{ .User.User_id }}">{{ .Follow }}</a>
+        </div>
+    </div>
+    {{/*<div class="right-div">*/}}
+        {{/*{% for post in posts %}*/}}
+        {{/*<div class="post">*/}}
+            {{/*<img class="post-useravatar" src="{{ url_for('static', filename='avatar.png') }}">*/}}
+            {{/*<span class="post-username">Nickname</span>*/}}
+            {{/*<span class="post-content">{{ post[1] }}</span>*/}}
+            {{/*<span class="post-date">{{ post[2] }}</span>*/}}
+            {{/*<a class="post-like" href="/like/{{ post[0] }}">Like <span>{{ post[3] }}</span></a>*/}}
+            {{/*<a class="post-comment" href="/post/{{ post[0] }}">Comment <span>X</span></a>*/}}
+        {{/*</div>*/}}
+        {{/*{% endfor %}*/}}
+    {{/*</div>*/}}
+</div>
+
+</body>

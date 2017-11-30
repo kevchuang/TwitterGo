@@ -1,0 +1,39 @@
+<head>
+  <link rel="stylesheet" type="text/css" href="/public/css/registration.css">
+  <link rel="stylesheet" type="text/css" href="/public/css/styles.css">
+</head>
+
+<body>
+
+  <div class="top-div">
+    <a href="/login"><img src="/public/img/logo_little.png" id="logo"></a>
+  </div>
+
+  <div class="main-div">
+    <h1>
+      <img src="/public/img/hello.gif">
+      Sign in page!
+    </h1>
+    <div class="inputs">
+    {{if .Error}} <p class=error><strong>Error:</strong>{{.Error}} {{end}}
+      <form title="registrationForm" action="registration" method="post">
+        <input type="text" name="login" placeholder="Login" class="text-in-form"/><br/>
+        <input type="text" name="lastname" placeholder="Lastname" class="text-in-form"/><br/>
+        <input type="text" name="firstname" placeholder="Firstname" class="text-in-form"/><br/>
+        <input type="text" name="mail" placeholder="Mail" class="text-in-form"/><br/>
+        <input type="password" name="password" placeholder="Password" class="text-in-form"/><br/>
+        <input type="submit" id="registrationButton" value="Register!">
+      </form>
+    </div>
+
+    <div class="little-links">
+      <a href="/login">Have an account already? Log In!</a>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>BJTU Twitterlike application ~ Software Project Management 1</span><br/>
+    <span>Louis CHAUMIER, Kévin CHUANG, Sylvain BIRUKOFF</span>
+  </div>
+
+</body>

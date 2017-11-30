@@ -1,0 +1,23 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="/public/css/list_following.css">
+    <link rel="stylesheet" type="text/css" href="/public/css/styles.css">
+</head>
+<body>
+
+<div class="top-div">
+    <div class="topdiv-links">
+        <a href="/feed" id="feedLink">Feed</a>
+        <a href="/profile/{{ .User_id }}" id="profileLink">Profile</a>
+        <a href="/settings" id="accountLink">Settings</a>
+        <a href="/logout" id="logoutLink">Logout</a>
+    </div>
+</div>
+
+<div class="main-div">
+    <div class="followingusers">
+        {{range .Nicknames}}
+        <div class="friend"> {{ . }} </div>
+        {{end}}
+    </div>
+</div>
+</body>
