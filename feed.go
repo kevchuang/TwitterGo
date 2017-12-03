@@ -32,13 +32,15 @@ func getAllUserId(user_id string) string {
 }
 
 func feed(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "cookie-name")
+	auth, _ := r.Cookie("authenticated")
+	user_id, _ := r.Cookie("user_id")
+
 	posts := make([]PostData, 0)
-	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
+	if auth == nil || auth.Value != "true" {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
-	query := "SELECT * FROM \"POSTS\" WHERE ans_to_post IS NULL AND user_id IN " + getAllUserId(session.Values["user_id"].(string)) + "ORDER BY date DESC"
+	query := "SELECT * FROM \"POSTS\" WHERE ans_to_post IS NULL AND user_id IN " + getAllUserId(user_id.Value) + "ORDER BY date DESC"
 	rows, err := db.Query(query)
 	if err != nil {
 		log.Panic(err)
@@ -60,7 +62,7 @@ func feed(w http.ResponseWriter, r *http.Request) {
 	}
 	data := FeedData {}
 	data.Posts = posts
-	data.User_id = session.Values["user_id"].(string)
+	data.User_id = user_id.Value
 	errorLog := tpl.ExecuteTemplate(w, "feed.html", &data)
 	if errorLog != nil {
 		log.Println(errorLog)
@@ -69,14 +71,15 @@ func feed(w http.ResponseWriter, r *http.Request) {
 }
 
 func add_post(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "cookie-name")
+	user_id, _ := r.Cookie("user_id")
 	if r.Method == "POST" {
 		if r.FormValue("post-content") != "" {
 			_, err := db.Exec("INSERT INTO \"POSTS\" (content, date, user_id) VALUES ($1, $2, $3)",
-				r.FormValue("post-content"), time.Now(), session.Values["user_id"].(string))
+				r.FormValue("post-content"), time.Now(), user_id.Value)
 			if err != nil {
 				log.Println(err)
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				return
 			}
 		}
 		http.Redirect(w, r, "/feed", http.StatusSeeOther)
@@ -85,13 +88,14 @@ func add_post(w http.ResponseWriter, r *http.Request) {
 
 func like_post(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	session, _ := store.Get(r, "cookie-name")
-	result := db.QueryRow("SELECT * from \"LIKES\" WHERE user_id = $1 AND post_id = $2", session.Values["user_id"].(string), vars["post_id"])
+	user_id, _ := r.Cookie("user_id")
+
+	result := db.QueryRow("SELECT * from \"LIKES\" WHERE user_id = $1 AND post_id = $2", user_id.Value, vars["post_id"])
 
 	lk := Like{}
 	err := result.Scan(&lk.user_id, &lk.post_id)
 	if err == sql.ErrNoRows {
-		_, err := db.Exec("INSERT INTO \"LIKES\" (user_id, post_id) VALUES ($1, $2)", session.Values["user_id"].(string), vars["post_id"])
+		_, err := db.Exec("INSERT INTO \"LIKES\" (user_id, post_id) VALUES ($1, $2)", user_id.Value, vars["post_id"])
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -102,7 +106,7 @@ func like_post(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 		}
 	} else {
-		_, err := db.Exec("DELETE FROM \"LIKES\" WHERE user_id = $1 AND post_id = $2", session.Values["user_id"].(string), vars["post_id"])
+		_, err := db.Exec("DELETE FROM \"LIKES\" WHERE user_id = $1 AND post_id = $2", user_id.Value, vars["post_id"])
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -118,13 +122,14 @@ func like_post(w http.ResponseWriter, r *http.Request) {
 
 func like(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	session, _ := store.Get(r, "cookie-name")
-	result := db.QueryRow("SELECT * from \"LIKES\" WHERE user_id = $1 AND post_id = $2", session.Values["user_id"].(string), vars["post_id"])
+	user_id, _ := r.Cookie("user_id")
+
+	result := db.QueryRow("SELECT * from \"LIKES\" WHERE user_id = $1 AND post_id = $2", user_id.Value, vars["post_id"])
 
 	lk := Like{}
 	err := result.Scan(&lk.user_id, &lk.post_id)
 	if err == sql.ErrNoRows {
-		_, err := db.Exec("INSERT INTO \"LIKES\" (user_id, post_id) VALUES ($1, $2)", session.Values["user_id"].(string), vars["post_id"])
+		_, err := db.Exec("INSERT INTO \"LIKES\" (user_id, post_id) VALUES ($1, $2)", user_id.Value, vars["post_id"])
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -135,7 +140,7 @@ func like(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 		}
 	} else {
-		_, err := db.Exec("DELETE FROM \"LIKES\" WHERE user_id = $1 AND post_id = $2", session.Values["user_id"].(string), vars["post_id"])
+		_, err := db.Exec("DELETE FROM \"LIKES\" WHERE user_id = $1 AND post_id = $2", user_id.Value, vars["post_id"])
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -195,17 +200,16 @@ func post(w http.ResponseWriter, r *http.Request) {
 		log.Println(errorLog)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 	}
-
 }
 
 func comment(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	session, _ := store.Get(r, "cookie-name")
+	user_id, _ := r.Cookie("user_id")
 
 	if r.Method == "POST" {
 		if r.FormValue("comment") != "" {
 			_, err := db.Exec("INSERT INTO \"POSTS\" (content, date, ans_to_post, user_id) VALUES ($1, $2, $3, $4)",
-				r.FormValue("comment"), time.Now(), vars["post_id"], session.Values["user_id"].(string))
+				r.FormValue("comment"), time.Now(), vars["post_id"], user_id.Value)
 			if err != nil {
 				log.Println(err)
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -233,14 +237,14 @@ func edit(w http.ResponseWriter, r *http.Request) {
 
 func dlete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	session, _ := store.Get(r, "cookie-name")
+	user_id, _ := r.Cookie("user_id")
 
 	row := db.QueryRow("SELECT * FROM \"POSTS\" WHERE user_id = $1 AND post_id = $2 AND ans_to_post IS NULL",
-		session.Values["user_id"].(string), vars["post_id"])
+		user_id.Value, vars["post_id"])
 	post := Post{}
 	result := row.Scan(&post.post_id, &post.content, &post.date, &post.nb_of_likes, &post.ans_to_post, &post.user_id)
 	_, err := db.Exec("DELETE FROM \"POSTS\" WHERE user_id = $1 AND post_id = $2",
-		session.Values["user_id"].(string), vars["post_id"])
+		user_id.Value, vars["post_id"])
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)

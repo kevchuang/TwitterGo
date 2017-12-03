@@ -20,15 +20,16 @@ func search(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	http.Redirect(w, r, "/feed", http.StatusSeeOther)
+	http.Redirect(w, r, "/feed", http.StatusBadRequest)
 }
 
 func profile(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	session, _ := store.Get(r, "cookie-name")
+	user_id, _ := r.Cookie("user_id")
+
 	row := db.QueryRow("SELECT * FROM \"USER\" WHERE user_id = $1", vars["user_id"])
 	data := ProfileData{}
-	data.User_id = session.Values["user_id"].(string)
+	data.User_id = user_id.Value
 	usr := User{}
 	result := row.Scan(&usr.lastname, &usr.firstname, &usr.nickname, &usr.mail, &usr.login_username, &usr.password, &usr.user_id, &usr.nb_follow)
 	data.User.User_id = usr.user_id
@@ -38,11 +39,11 @@ func profile(w http.ResponseWriter, r *http.Request) {
 	data.User.Nickname = usr.nickname
 	data.User.Nb_follow = usr.nb_follow
 	rowFriend := db.QueryRow("SELECT * FROM \"FRIENDS\" WHERE user_id = $1 and id_followed = $2",
-		session.Values["user_id"].(string), vars["user_id"])
+		user_id.Value, vars["user_id"])
 
 	friend := Friend{}
 	result = rowFriend.Scan(&friend.user_id, &friend.id_followed)
-	if vars["user_id"] == session.Values["user_id"] {
+	if vars["user_id"] == user_id.Value {
 		data.Follow = ""
 	} else if result == sql.ErrNoRows {
 		data.Follow = "Follow"
@@ -58,31 +59,33 @@ func profile(w http.ResponseWriter, r *http.Request) {
 
 func follow(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	session, _ := store.Get(r, "cookie-name")
+	user_id, _ := r.Cookie("user_id")
+
 	row := db.QueryRow("SELECT * FROM \"FRIENDS\" WHERE user_id = $1 AND id_followed = $2",
-		session.Values["user_id"].(string), vars["user_id"])
+		user_id.Value, vars["user_id"])
 	friend := Friend{}
 
 	result := row.Scan(&friend.user_id, &friend.id_followed)
 	if result == sql.ErrNoRows {
 		db.Exec("INSERT INTO \"FRIENDS\" (user_id, id_followed) VALUES ($1, $2)",
-			session.Values["user_id"].(string), vars["user_id"])
-		db.Exec("UPDATE \"USER\" SET nb_follow = nb_follow + 1 WHERE user_id = $1", session.Values["user_id"].(string))
+			user_id.Value, vars["user_id"])
+		db.Exec("UPDATE \"USER\" SET nb_follow = nb_follow + 1 WHERE user_id = $1", user_id.Value)
 	} else {
 		db.Exec("DELETE FROM \"FRIENDS\" WHERE user_id = $1 AND id_followed = $2",
-			session.Values["user_id"].(string), vars["user_id"])
-		db.Exec("UPDATE \"USER\" SET nb_follow = nb_follow - 1 WHERE user_id = $1", session.Values["user_id"].(string))
+			user_id.Value, vars["user_id"])
+		db.Exec("UPDATE \"USER\" SET nb_follow = nb_follow - 1 WHERE user_id = $1", user_id.Value)
 	}
 	http.Redirect(w, r, "/profile/" + vars["user_id"], http.StatusSeeOther)
 }
 
 func list_following(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	session, _ := store.Get(r, "cookie-name")
+	user_id, _ := r.Cookie("user_id")
+
 	rows, err := db.Query("SELECT * FROM \"FRIENDS\" WHERE user_id = $1", vars["user_id"])
 
 	data := ListData{}
-	data.User_id = session.Values["user_id"].(string)
+	data.User_id = user_id.Value
 	if err != nil {
 		log.Panic(err)
 	}
@@ -106,11 +109,12 @@ func list_following(w http.ResponseWriter, r *http.Request) {
 
 func list_followers(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	session, _ := store.Get(r, "cookie-name")
+	user_id, _ := r.Cookie("user_id")
+
 	rows, err := db.Query("SELECT * FROM \"FRIENDS\" WHERE id_followed = $1", vars["user_id"])
 
 	data := ListData{}
-	data.User_id = session.Values["user_id"].(string)
+	data.User_id = user_id.Value
 	if err != nil {
 		log.Panic(err)
 	}

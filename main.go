@@ -6,18 +6,12 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
-	"github.com/gorilla/sessions"
 	"github.com/gorilla/mux"
 )
 
 var db *sql.DB
 var tpl *template.Template
 var err error
-
-var (
-	key = []byte("super-secret-key")
-	store = sessions.NewCookieStore(key)
-)
 
 func init()  {
 	db, err = sql.Open("postgres", "host=localhost port=5432 user=postgres password=postgres dbname=postgres sslmode=disable")

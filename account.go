@@ -5,14 +5,19 @@ import (
 	"net/http"
 	"database/sql"
 	"strings"
+	"time"
 )
 
 func sttgs(w http.ResponseWriter, r *http.Request)  {
-	session, _ := store.Get(r, "cookie-name")
+	user_id, _ := r.Cookie("user_id")
+	firstname, _ := r.Cookie("firstname")
+	lastname, _ := r.Cookie("lastname")
+	mail, _ := r.Cookie("mail")
+	nickname, _ := r.Cookie("nickname")
 
 	if r.Method == "POST" {
 		_, err = db.Exec("UPDATE \"USER\" SET lastname = $1, firstname = $2, nickname = $3, mail = $4 WHERE user_id = $5",
-			r.FormValue("lastname"), r.FormValue("firstname"), r.FormValue("nickname"), strings.Trim(strings.ToLower(r.FormValue("mail")), " "), session.Values["user_id"].(string))
+			r.FormValue("lastname"), r.FormValue("firstname"), r.FormValue("nickname"), strings.Trim(strings.ToLower(r.FormValue("mail")), " "), user_id.Value)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, http.StatusText(500), http.StatusInternalServerError)
@@ -20,7 +25,7 @@ func sttgs(w http.ResponseWriter, r *http.Request)  {
 		}
 		if r.FormValue("password") != "" {
 			_, err = db.Exec("UPDATE \"USER\" SET password = crypt($1, gen_salt('bf', 8)) WHERE user_id = $2",
-				r.FormValue("password"), session.Values["user_id"].(string))
+				r.FormValue("password"), user_id.Value)
 			if err != nil {
 				log.Println(err)
 				http.Error(w, http.StatusText(500), http.StatusInternalServerError)
@@ -28,17 +33,23 @@ func sttgs(w http.ResponseWriter, r *http.Request)  {
 			}
 
 		}
-		session.Values["lastname"] = r.FormValue("lastname")
-		session.Values["firstname"] = r.FormValue("firstname")
-		session.Values["nickname"] = r.FormValue("nickname")
-		session.Values["mail"] = r.FormValue("mail")
-		session.Save(r, w)
+
+		lastname.Value = r.FormValue("lastname")
+		firstname.Value = r.FormValue("firstname")
+		nickname.Value = r.FormValue("nickname")
+		mail.Value = r.FormValue("mail")
+
+		http.SetCookie(w, lastname)
+		http.SetCookie(w, firstname)
+		http.SetCookie(w, nickname)
+		http.SetCookie(w, mail)
+		http.SetCookie(w, user_id)
 	}
 	usr := UserData {}
-	usr.Lastname = session.Values["lastname"].(string)
-	usr.Firstname = session.Values["firstname"].(string)
-	usr.Nickname = session.Values["nickname"].(string)
-	usr.Mail = session.Values["mail"].(string)
+	usr.Lastname = lastname.Value
+	usr.Firstname = firstname.Value
+	usr.Nickname = nickname.Value
+	usr.Mail = mail.Value
 	err := tpl.ExecuteTemplate(w, "settings.html", &usr)
 	if err != nil {
 		log.Println(err)
@@ -88,10 +99,9 @@ func rgstr(w http.ResponseWriter, r *http.Request) {
 }
 
 func lgout(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "cookie-name")
-
-	session.Values["authenticated"] = false
-	session.Save(r, w)
+	auth, _ := r.Cookie("authenticated")
+	auth.Value = "false"
+	http.SetCookie(w, auth)
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
@@ -100,7 +110,6 @@ func lgn(w http.ResponseWriter, r *http.Request) {
 	wd := WebData {
 		Error: "",
 	}
-	session, _ := store.Get(r, "cookie-name")
 
 	if r.Method == "POST" {
 		row := db.QueryRow("SELECT * from \"USER\" WHERE login_username = $1 AND password = crypt($2, password);",
@@ -110,14 +119,22 @@ func lgn(w http.ResponseWriter, r *http.Request) {
 		if err == sql.ErrNoRows {
 			wd.Error = "Invalid username or password"
 		} else {
-			session.Values["authenticated"] = true
-			session.Values["lastname"] = usr.lastname
-			session.Values["firstname"] = usr.firstname
-			session.Values["nickname"] = usr.nickname
-			session.Values["mail"] = usr.mail
-			session.Values["login_username"] = usr.login_username
-			session.Values["user_id"] = usr.user_id
-			session.Save(r, w)
+			expiration := time.Now().Add(365 * 24 * time.Hour)
+			auth := http.Cookie{Name: "authenticated", Value: "true", Expires: expiration}
+			lastname := http.Cookie{Name: "lastname", Value: usr.lastname, Expires: expiration}
+			firstname := http.Cookie{Name: "firstname", Value: usr.firstname, Expires: expiration}
+			nickname := http.Cookie{Name: "nickname", Value: usr.nickname, Expires: expiration}
+			mail := http.Cookie{Name: "mail", Value: usr.mail, Expires: expiration}
+			login := http.Cookie{Name: "login_username", Value: usr.login_username, Expires: expiration}
+			user_id := http.Cookie{Name: "user_id", Value: usr.user_id, Expires: expiration}
+			http.SetCookie(w, &auth)
+			http.SetCookie(w, &lastname)
+			http.SetCookie(w, &firstname)
+			http.SetCookie(w, &nickname)
+			http.SetCookie(w, &mail)
+			http.SetCookie(w, &login)
+			http.SetCookie(w, &user_id)
+
 			http.Redirect(w, r, "/feed", http.StatusSeeOther)
 		}
 	}
