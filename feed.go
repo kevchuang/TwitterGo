@@ -81,8 +81,12 @@ func add_post(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
+		} else {
+			http.Redirect(w, r, "/feed", http.StatusBadRequest)
+			return
 		}
 		http.Redirect(w, r, "/feed", http.StatusSeeOther)
+		return
 	}
 }
 
@@ -117,7 +121,7 @@ func like_post(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 		}
 	}
-	http.Redirect(w, r, "/post/" + vars["post_page"], http.StatusSeeOther)
+	http.Redirect(w, r, "/post/" + vars["post_page"], http.StatusOK)
 }
 
 func like(w http.ResponseWriter, r *http.Request) {
@@ -133,25 +137,30 @@ func like(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
 		}
 		_, errorLog := db.Exec("UPDATE \"POSTS\" SET nb_of_likes = nb_of_likes + 1 WHERE post_id = $1", vars["post_id"])
 		if errorLog != nil {
 			log.Println(errorLog)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
 		}
 	} else {
 		_, err := db.Exec("DELETE FROM \"LIKES\" WHERE user_id = $1 AND post_id = $2", user_id.Value, vars["post_id"])
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
 		}
 		_, errorLog := db.Exec("UPDATE \"POSTS\" SET nb_of_likes = nb_of_likes - 1 WHERE post_id = $1", vars["post_id"])
 		if errorLog != nil {
 			log.Println(errorLog)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
 		}
 	}
-	http.Redirect(w, r, "/feed", http.StatusSeeOther)
+	http.Redirect(w, r, "/feed", http.StatusOK)
+	return
 }
 
 func post(w http.ResponseWriter, r *http.Request) {
@@ -213,9 +222,14 @@ func comment(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Println(err)
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				return
 			}
+		} else {
+			http.Redirect(w, r, "/post/" + vars["post_id"], http.StatusBadRequest)
+			return
 		}
-		http.Redirect(w, r, "/post/" + vars["post_id"], http.StatusSeeOther)
+		http.Redirect(w, r, "/post/" + vars["post_id"], http.StatusOK)
+		return
 	}
 }
 
@@ -229,9 +243,14 @@ func edit(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Println(err)
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				return
 			}
+		} else {
+			http.Redirect(w, r, "/post/" + vars["post_page"], http.StatusBadRequest)
+			return
 		}
-		http.Redirect(w, r, "/post/" + vars["post_page"], http.StatusSeeOther)
+		http.Redirect(w, r, "/post/" + vars["post_page"], http.StatusOK)
+		return
 	}
 }
 

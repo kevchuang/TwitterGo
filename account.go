@@ -100,9 +100,15 @@ func rgstr(w http.ResponseWriter, r *http.Request) {
 
 func lgout(w http.ResponseWriter, r *http.Request) {
 	auth, _ := r.Cookie("authenticated")
-	auth.Value = "false"
-	http.SetCookie(w, auth)
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	if auth == nil {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	} else {
+		auth.Value = "false"
+		http.SetCookie(w, auth)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
 }
 
 
