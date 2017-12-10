@@ -186,7 +186,8 @@ func post(w http.ResponseWriter, r *http.Request) {
 	comments := make([]PostData, 0)
 	rows, err := db.Query("SELECT * FROM \"POSTS\" WHERE ans_to_post = $1", vars["post_id"])
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 	}
 	defer rows.Close()
 	if rows != nil {
@@ -287,10 +288,10 @@ func dlete(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
-		http.Redirect(w, r, "/feed", http.StatusSeeOther)
+		http.Redirect(w, r, "/feed", http.StatusOK)
 		return
 	}
 
-	http.Redirect(w, r, "/post/"+vars["post_page"], http.StatusSeeOther)
+	http.Redirect(w, r, "/post/"+vars["post_page"], http.StatusOK)
 	return
 }

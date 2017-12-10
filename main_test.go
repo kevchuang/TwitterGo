@@ -73,19 +73,19 @@ func TestLoginWrongUser(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code, "Wrong user response is expected")
 }
 
-//func TestRegisterUser(t *testing.T) {
-//	request, _ := http.NewRequest("POST", "/registration", nil)
-//	form := url.Values{}
-//	form.Add("lastname", "unittest")
-//	form.Add("firstname", "unittest")
-//	form.Add("login", "unittest")
-//	form.Add("mail", "unittest")
-//	form.Add("password", "unittest")
-//	request.Form = form
-//	response := httptest.NewRecorder()
-//	Router().ServeHTTP(response, request)
-//	assert.Equal(t, http.StatusSeeOther, response.Code, "Redirection response is expected")
-//}
+func TestRegisterUser(t *testing.T) {
+	request, _ := http.NewRequest("POST", "/registration", nil)
+	form := url.Values{}
+	form.Add("lastname", "unittest")
+	form.Add("firstname", "unittest")
+	form.Add("login", "unittest")
+	form.Add("mail", "unittest")
+	form.Add("password", "unittest")
+	request.Form = form
+	response := httptest.NewRecorder()
+	Router().ServeHTTP(response, request)
+	assert.Equal(t, http.StatusSeeOther, response.Code, "Redirection response is expected")
+}
 
 func TestLoginUser(t *testing.T) {
 	request, _ := http.NewRequest("POST", "/login", nil)
@@ -193,6 +193,16 @@ func TestLike(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code, "Ok response is expected")
 }
 
+func TestNoExistLike(t *testing.T) {
+	response := httptest.NewRecorder()
+	SetCookies(response)
+	request, _ := http.NewRequest("POST", "/like/1000", nil)
+	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
+	Router().ServeHTTP(response, request)
+	assert.Equal(t, http.StatusInternalServerError, response.Code, "Ok response is expected")
+}
+
+
 func TestPost(t *testing.T) {
 	response := httptest.NewRecorder()
 	SetCookies(response)
@@ -200,6 +210,16 @@ func TestPost(t *testing.T) {
 	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
 	Router().ServeHTTP(response, request)
 	assert.Equal(t, http.StatusOK, response.Code, "Ok response is expected")
+}
+
+func TestNoExistPost(t *testing.T) {
+	response := httptest.NewRecorder()
+	SetCookies(response)
+	request, _ := http.NewRequest("GET", "/post/1000", nil)
+	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
+	Router().ServeHTTP(response, request)
+	assert.Equal(t, http.StatusInternalServerError, response.Code, "Ok response is expected")
+
 }
 
 func TestComment(t *testing.T) {
@@ -226,3 +246,77 @@ func TestNoComment(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, response.Code, "Bad request response is expected")
 }
 
+func TestEdit(t *testing.T) {
+	response := httptest.NewRecorder()
+	SetCookies(response)
+	request, _ := http.NewRequest("POST", "/edit/1/1", nil)
+	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
+	form := url.Values{}
+	form.Add("editPostText", "editing post")
+	request.Form = form
+	Router().ServeHTTP(response, request)
+	assert.Equal(t, http.StatusOK, response.Code, "Ok response is expected")
+}
+
+func TestNoEdit(t *testing.T) {
+	response := httptest.NewRecorder()
+	SetCookies(response)
+	request, _ := http.NewRequest("POST", "/edit/1/1", nil)
+	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
+	form := url.Values{}
+	form.Add("editPostText", "")
+	request.Form = form
+	Router().ServeHTTP(response, request)
+	assert.Equal(t, http.StatusBadRequest, response.Code, "Bad request response is expected")
+}
+
+func TestDelete(t *testing.T) {
+	response := httptest.NewRecorder()
+	SetCookies(response)
+	request, _ := http.NewRequest("POST", "/delete/1/1", nil)
+	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
+	Router().ServeHTTP(response, request)
+	assert.Equal(t, http.StatusOK, response.Code, "Ok response is expected")
+}
+
+func TestRegisterFollowUser(t *testing.T) {
+	request, _ := http.NewRequest("POST", "/registration", nil)
+	form := url.Values{}
+	form.Add("lastname", "followtest")
+	form.Add("firstname", "followtest")
+	form.Add("login", "followtest")
+	form.Add("mail", "followtest")
+	form.Add("password", "followtest")
+	request.Form = form
+	response := httptest.NewRecorder()
+	Router().ServeHTTP(response, request)
+	assert.Equal(t, http.StatusSeeOther, response.Code, "Redirection response is expected")
+}
+
+func TestFollow(t *testing.T) {
+	response := httptest.NewRecorder()
+	SetCookies(response)
+	request, _ := http.NewRequest("POST", "/follow/2", nil)
+	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
+	Router().ServeHTTP(response, request)
+	assert.Equal(t, http.StatusOK, response.Code, "Ok response is expected")
+}
+
+func TestListFollowing(t *testing.T) {
+	response := httptest.NewRecorder()
+	SetCookies(response)
+	request, _ := http.NewRequest("GET", "/list_following/1", nil)
+	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
+	Router().ServeHTTP(response, request)
+	assert.Equal(t, http.StatusOK, response.Code, "Ok response is expected")
+}
+
+func TestListFollowers(t *testing.T) {
+	response := httptest.NewRecorder()
+	SetCookies(response)
+	request, _ := http.NewRequest("GET", "/list_following/1", nil)
+	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
+	Router().ServeHTTP(response, request)
+	assert.Equal(t, http.StatusOK, response.Code, "Ok response is expected")
+
+}

@@ -75,7 +75,8 @@ func follow(w http.ResponseWriter, r *http.Request) {
 			user_id.Value, vars["user_id"])
 		db.Exec("UPDATE \"USER\" SET nb_follow = nb_follow - 1 WHERE user_id = $1", user_id.Value)
 	}
-	http.Redirect(w, r, "/profile/" + vars["user_id"], http.StatusSeeOther)
+	http.Redirect(w, r, "/profile/" + vars["user_id"], http.StatusOK)
+	return
 }
 
 func list_following(w http.ResponseWriter, r *http.Request) {
@@ -104,6 +105,7 @@ func list_following(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -133,5 +135,6 @@ func list_followers(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
 	}
 }
