@@ -18,7 +18,7 @@
     <div class="mid-div">
         <div class="post">
             <img class="post-useravatar" src="/public/img/avatar.png">
-            <span class="post-username">Nickname</span>
+            <span class="post-username">{{ .Post.Nickname }}</span>
             <span class="post-content" id="post-content">{{ .Post.Content }}</span>
             <span class="post-date">{{ .Post.Date }}</span>
             <div class="edit-delete-links">
@@ -45,7 +45,7 @@
                 {{range .Comments }}
                 <div class="comment">
                     <img class="post-useravatar" src="/public/img/avatar.png">
-                    <span class="post-username">Nickname</span>
+                    <span class="post-username">{{ .Nickname }}</span>
                     <span class="post-content" id="post-content-comment">{{ .Content }}</span>
                     <span class="post-date">{{ .Date }}</span>
                     <div class="edit-delete-links">
@@ -65,5 +65,6 @@
 
     </div>
 
+    </div>
 </div>
 </body>

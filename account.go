@@ -117,6 +117,11 @@ func lgn(w http.ResponseWriter, r *http.Request) {
 		Error: "",
 	}
 
+	auth, _ := r.Cookie("authenticated")
+	if auth != nil && strings.Compare(auth.Value, "true") == 0 {
+		http.Redirect(w, r, "/feed", http.StatusSeeOther)
+		return
+	}
 	if r.Method == "POST" {
 		row := db.QueryRow("SELECT * from \"USER\" WHERE login_username = $1 AND password = crypt($2, password);",
 			strings.Trim(strings.ToLower(r.FormValue("username")), " "), r.FormValue("password"))

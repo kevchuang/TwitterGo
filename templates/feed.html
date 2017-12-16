@@ -32,7 +32,7 @@
         {{range .Posts}}
         <div class="post">
             <img class="post-useravatar" src="/public/img/avatar.png">
-            <span class="post-username">Nickname</span>
+            <span class="post-username">{{ .Nickname }}</span>
             <span class="post-content">{{ .Content }}</span>
             <span class="post-date">{{ .Date }}</span>
             <a class="post-like" href="/like/{{ .Post_id }}">Like <span>{{ .Nb_of_likes }}</span></a>

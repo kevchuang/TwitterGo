@@ -42,9 +42,10 @@ type UserData struct {
 
 
 type PostData struct {
+	Nickname string
 	Post_id int
 	Content string
-	Date time.Time
+	Date string
 	Nb_of_likes int
 	Ans_to_post string
 	User_id int

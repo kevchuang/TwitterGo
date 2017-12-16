@@ -6,29 +6,38 @@ import (
 	"time"
 	"github.com/gorilla/mux"
 	"database/sql"
-	"bytes"
+	"github.com/lib/pq"
+	"strconv"
 )
 
-func getAllUserId(user_id string) string {
-	buffer := bytes.Buffer{}
+func getAllUserId(w http.ResponseWriter, user_id string) []int {
+	valueUser, errorLog := strconv.Atoi(user_id)
+	if errorLog != nil {
+		log.Println(errorLog)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
 
-	buffer.WriteString("(")
+	buffer := []int{valueUser}
+
 	rows, err := db.Query("SELECT * FROM \"FRIENDS\" WHERE user_id = $1", user_id)
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 	}
-	buffer.WriteString(user_id)
 	defer rows.Close()
 	if rows != nil {
 		friend := Friend{}
 		for rows.Next() {
-			buffer.WriteString(",")
 			rows.Scan(&friend.user_id, &friend.id_followed)
-			buffer.WriteString(friend.id_followed)
+			value, err := strconv.Atoi(friend.id_followed)
+			if err != nil {
+				log.Println(err)
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+			}
+			buffer = append(buffer, value)
 		}
 	}
-	buffer.WriteString(")")
-	return buffer.String()
+	return buffer
 }
 
 func feed(w http.ResponseWriter, r *http.Request) {
@@ -40,10 +49,11 @@ func feed(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
-	query := "SELECT * FROM \"POSTS\" WHERE ans_to_post IS NULL AND user_id IN " + getAllUserId(user_id.Value) + "ORDER BY date DESC"
-	rows, err := db.Query(query)
+	rows, err := db.Query("SELECT * FROM \"POSTS\" WHERE ans_to_post IS NULL AND user_id = ANY($1) ORDER BY date DESC", pq.Array(getAllUserId(w, user_id.Value)))
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
 	}
 	defer rows.Close()
 	if rows != nil {
@@ -53,10 +63,14 @@ func feed(w http.ResponseWriter, r *http.Request) {
 			post := PostData{}
 			post.Post_id = postScan.post_id
 			post.Content = postScan.content
-			post.Date = postScan.date
+			post.Date = postScan.date.Format("Mon Jan _2 15:04:05 2006")
 			post.Nb_of_likes = postScan.nb_of_likes
 			post.Ans_to_post = postScan.ans_to_post.String
 			post.User_id = postScan.user_id
+			nicknameQuery := db.QueryRow("SELECT nickname FROM \"USER\" WHERE user_id = $1", post.User_id)
+			nickname := string("")
+			nicknameQuery.Scan(&nickname)
+			post.Nickname = nickname
 			posts = append(posts, post)
 		}
 	}
@@ -82,7 +96,7 @@ func add_post(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else {
-			http.Redirect(w, r, "/feed", http.StatusBadRequest)
+			http.Redirect(w, r, "/feed", http.StatusNotModified)
 			return
 		}
 		http.Redirect(w, r, "/feed", http.StatusSeeOther)
@@ -121,7 +135,7 @@ func like_post(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 		}
 	}
-	http.Redirect(w, r, "/post/" + vars["post_page"], http.StatusOK)
+	http.Redirect(w, r, "/post/" + vars["post_page"], http.StatusSeeOther)
 }
 
 func like(w http.ResponseWriter, r *http.Request) {
@@ -159,7 +173,7 @@ func like(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	http.Redirect(w, r, "/feed", http.StatusOK)
+	http.Redirect(w, r, "/feed", http.StatusSeeOther)
 	return
 }
 
@@ -177,10 +191,14 @@ func post(w http.ResponseWriter, r *http.Request) {
 	postData := PostData{}
 	postData.Post_id = post.post_id
 	postData.Content = post.content
-	postData.Date = post.date
+	postData.Date = post.date.Format("Mon Jan _2 15:04:05 2006")
 	postData.Nb_of_likes = post.nb_of_likes
 	postData.Ans_to_post = post.ans_to_post.String
 	postData.User_id = post.user_id
+	nicknameQuery := db.QueryRow("SELECT nickname FROM \"USER\" WHERE user_id = $1", postData.User_id)
+	nickname := string("")
+	nicknameQuery.Scan(&nickname)
+	postData.Nickname = nickname
 	data.Post = postData
 
 	comments := make([]PostData, 0)
@@ -197,10 +215,14 @@ func post(w http.ResponseWriter, r *http.Request) {
 			post := PostData{}
 			post.Post_id = postScan.post_id
 			post.Content = postScan.content
-			post.Date = postScan.date
+			post.Date = postScan.date.Format("Mon Jan _2 15:04:05 2006")
 			post.Nb_of_likes = postScan.nb_of_likes
 			post.Ans_to_post = postScan.ans_to_post.String
 			post.User_id = postScan.user_id
+			nicknameQuery := db.QueryRow("SELECT nickname FROM \"USER\" WHERE user_id = $1", post.User_id)
+			nickname := string("")
+			nicknameQuery.Scan(&nickname)
+			post.Nickname = nickname
 			comments = append(comments, post)
 		}
 		data.Comments = comments
@@ -226,10 +248,10 @@ func comment(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else {
-			http.Redirect(w, r, "/post/" + vars["post_id"], http.StatusBadRequest)
+			http.Redirect(w, r, "/post/" + vars["post_id"], http.StatusNotModified)
 			return
 		}
-		http.Redirect(w, r, "/post/" + vars["post_id"], http.StatusOK)
+		http.Redirect(w, r, "/post/" + vars["post_id"], http.StatusSeeOther)
 		return
 	}
 }
@@ -247,10 +269,10 @@ func edit(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else {
-			http.Redirect(w, r, "/post/" + vars["post_page"], http.StatusBadRequest)
+			http.Redirect(w, r, "/post/" + vars["post_page"], http.StatusNotModified)
 			return
 		}
-		http.Redirect(w, r, "/post/" + vars["post_page"], http.StatusOK)
+		http.Redirect(w, r, "/post/" + vars["post_page"], http.StatusSeeOther)
 		return
 	}
 }
@@ -263,13 +285,11 @@ func dlete(w http.ResponseWriter, r *http.Request) {
 		user_id.Value, vars["post_id"])
 	post := Post{}
 	result := row.Scan(&post.post_id, &post.content, &post.date, &post.nb_of_likes, &post.ans_to_post, &post.user_id)
-	_, err := db.Exec("DELETE FROM \"POSTS\" WHERE user_id = $1 AND post_id = $2",
-		user_id.Value, vars["post_id"])
+	_, err := db.Exec("DELETE FROM \"POSTS\" WHERE user_id = $1 AND post_id = $2", user_id.Value, vars["post_id"])
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 	}
-
 	if result != sql.ErrNoRows {
 		rows, err := db.Query("SELECT * FROM \"POSTS\" WHERE ans_to_post = $1", vars["post_id"])
 		if err != nil {
@@ -288,10 +308,10 @@ func dlete(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
-		http.Redirect(w, r, "/feed", http.StatusOK)
+		http.Redirect(w, r, "/feed", http.StatusSeeOther)
 		return
 	}
 
-	http.Redirect(w, r, "/post/"+vars["post_page"], http.StatusOK)
+	http.Redirect(w, r, "/post/"+vars["post_page"], http.StatusSeeOther)
 	return
 }

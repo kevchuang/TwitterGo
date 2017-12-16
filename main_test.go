@@ -145,7 +145,7 @@ func TestSearchWrongUser(t *testing.T) {
 	request.Form = form
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, request)
-	assert.Equal(t, http.StatusBadRequest, response.Code, "Bad request response is expected")
+	assert.Equal(t, http.StatusNotModified, response.Code, "Not modified response is expected")
 }
 
 func TestSearchUser(t *testing.T) {
@@ -181,7 +181,7 @@ func TestAddEmptyPost(t *testing.T) {
 	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
 
 	Router().ServeHTTP(response, request)
-	assert.Equal(t, http.StatusBadRequest, response.Code, "Bad request response is expected")
+	assert.Equal(t, http.StatusNotModified, response.Code, "Not modified response is expected")
 }
 
 func TestLike(t *testing.T) {
@@ -190,7 +190,7 @@ func TestLike(t *testing.T) {
 	request, _ := http.NewRequest("POST", "/like/1", nil)
 	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
 	Router().ServeHTTP(response, request)
-	assert.Equal(t, http.StatusOK, response.Code, "Ok response is expected")
+	assert.Equal(t, http.StatusSeeOther, response.Code, "Ok response is expected")
 }
 
 func TestNoExistLike(t *testing.T) {
@@ -231,7 +231,7 @@ func TestComment(t *testing.T) {
 	form.Add("comment", "Comment unit test")
 	request.Form = form
 	Router().ServeHTTP(response, request)
-	assert.Equal(t, http.StatusOK, response.Code, "Ok response is expected")
+	assert.Equal(t, http.StatusSeeOther, response.Code, "Ok response is expected")
 }
 
 func TestNoComment(t *testing.T) {
@@ -243,7 +243,7 @@ func TestNoComment(t *testing.T) {
 	form.Add("comment", "")
 	request.Form = form
 	Router().ServeHTTP(response, request)
-	assert.Equal(t, http.StatusBadRequest, response.Code, "Bad request response is expected")
+	assert.Equal(t, http.StatusNotModified, response.Code, "Bad request response is expected")
 }
 
 func TestEdit(t *testing.T) {
@@ -255,7 +255,7 @@ func TestEdit(t *testing.T) {
 	form.Add("editPostText", "editing post")
 	request.Form = form
 	Router().ServeHTTP(response, request)
-	assert.Equal(t, http.StatusOK, response.Code, "Ok response is expected")
+	assert.Equal(t, http.StatusSeeOther, response.Code, "Ok response is expected")
 }
 
 func TestNoEdit(t *testing.T) {
@@ -267,7 +267,7 @@ func TestNoEdit(t *testing.T) {
 	form.Add("editPostText", "")
 	request.Form = form
 	Router().ServeHTTP(response, request)
-	assert.Equal(t, http.StatusBadRequest, response.Code, "Bad request response is expected")
+	assert.Equal(t, http.StatusNotModified, response.Code, "Bad request response is expected")
 }
 
 func TestDelete(t *testing.T) {
@@ -276,7 +276,7 @@ func TestDelete(t *testing.T) {
 	request, _ := http.NewRequest("POST", "/delete/1/1", nil)
 	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
 	Router().ServeHTTP(response, request)
-	assert.Equal(t, http.StatusOK, response.Code, "Ok response is expected")
+	assert.Equal(t, http.StatusSeeOther, response.Code, "Ok response is expected")
 }
 
 func TestRegisterFollowUser(t *testing.T) {
@@ -299,7 +299,7 @@ func TestFollow(t *testing.T) {
 	request, _ := http.NewRequest("POST", "/follow/2", nil)
 	request.Header = http.Header{"Cookie": response.HeaderMap["Set-Cookie"]}
 	Router().ServeHTTP(response, request)
-	assert.Equal(t, http.StatusOK, response.Code, "Ok response is expected")
+	assert.Equal(t, http.StatusSeeOther, response.Code, "Ok response is expected")
 }
 
 func TestListFollowing(t *testing.T) {
