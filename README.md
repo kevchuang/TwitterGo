@@ -15,7 +15,8 @@ The installation is divide in 4 parts:
 2. Installation of multiple go packages.
 3. Configuration of the different components.
 4. Deployment.
-You can either follow the instructions line as follow, or use the shell script **deploy.sh** at the root of the repository (**$ROOT**). 
+
+You can either follow the instructions line as follow, or use the shell script **deploy.sh** and then the **launch.sh** at the root of the repository (**$ROOT**)
 
 ### The database
 
@@ -53,3 +54,8 @@ Now you can try our web application **BJTUitter**, simply use this command line 
 You can also launch our multiple test to insure our code integrity. Use this command line at the **$ROOT**:
 
 `go test`
+
+###Contributors
+**Kevin Chuang**
+**Sylvain Birukoff**
+**Louis Chaumier**
