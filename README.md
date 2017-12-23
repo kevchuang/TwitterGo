@@ -10,21 +10,23 @@ This document describe how to install and deploy our web application **BJTUitter
 
 ## Installation
 
-The installation is divide in 4 parts:
-1. Installation, creation and deployment of the PostgreSQL database.
-2. Installation of multiple go packages.
-3. Configuration of the different components.
-4. Deployment.
+The installation is divided in 4 parts:
+	1. Installation, creation and deployment of the PostgreSQL database.
+	2. Installation of multiple Go packages.
+	3. Configuration of the different components.
+	4. Deployment.
 
-You can either follow the instructions line as follow, or use the bash scripts **deploy.sh** and **launch.sh** at the root of the repository (**$ROOT**).
+You can either follow the instruction lines as follow, or use the bash scripts **deploy.sh** and **launch.sh** at the root of the repository (**$ROOT**).
 
-### The database
+### Database
 
-Before anything else, you need to download the pgcrypto extension use by our project. On Ubuntu distribution you can add it like that:
+Firstly, you need to download the Pgcrypto extension use by our project.
+
+On Ubuntu distribution you can add it like that:
 
 * `sudo apt-get install postgresql-contrib-9.6`
 
-Once you have setup PostgreSQL you can create the database that **BJTUitter** will use. Use this command line at the **$ROOT** to create the database:
+Once you have setup PostgreSQL, you can create the database that **BJTUitter** will use. Use this command line at the **$ROOT** to create the database:
 
 * `psql -U postgres < create_database.sql`
 
@@ -41,7 +43,7 @@ Download the go packages that the application use via this command:
 
 ### Configuration
 
-You can configure the connection of the web application to the PostgreSQL's database throught this file **$ROOT/main.go** at the line 17:
+You can configure the connection of the web application to the PostgreSQL's database through this file **$ROOT/main.go** at the line 17:
 
 * `db, err = sql.Open("postgres", "host=localhost port=5432 user=postgres password=postgres dbname=BJTUitter sslmode=disable")`
 
@@ -49,7 +51,7 @@ You can configure the connection of the web application to the PostgreSQL's data
 
 Now you can try our web application **BJTUitter**, simply use this command line at the **$ROOT**:
 
-* `go build && ./TwitterGo`
+* `go build && ./BJTUitter`
 
 You can also launch our multiple test to insure our code integrity. Use this command line at the **$ROOT**:
 
