@@ -14,7 +14,7 @@ var tpl *template.Template
 var err error
 
 func init()  {
-	db, err = sql.Open("postgres", "host=localhost port=5432 user=postgres password=postgres dbname=BJTUitter sslmode=disable")
+	db, err = sql.Open("postgres", "host=localhost port=5435 user=postgres password=postgre dbname=BJTUitter sslmode=disable")
 	if err != nil {
 		panic(err)
 	}
@@ -48,7 +48,7 @@ func main()  {
 	r.HandleFunc("/list_following/{user_id}", list_following)
 	r.HandleFunc("/list_followers/{user_id}", list_followers)
 	http.Handle("/", r)
-	http.ListenAndServe(":6666", nil)
+	http.ListenAndServe(":8082", nil)
 }
 
 func index(w http.ResponseWriter, r *http.Request)  {
