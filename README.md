@@ -16,7 +16,7 @@ The installation is divide in 4 parts:
 3. Configuration of the different components.
 4. Deployment.
 
-You can either follow the instructions line as follow, or use the shell script **deploy.sh** and then the **launch.sh** at the root of the repository (**$ROOT**)
+You can either follow the instructions line as follow, or use the bash scripts **deploy.sh** and **launch.sh** at the root of the repository (**$ROOT**).
 
 ### The database
 
@@ -55,7 +55,10 @@ You can also launch our multiple test to insure our code integrity. Use this com
 
 `go test`
 
-###Contributors
+### Contributors
+
 **Kevin Chuang**
+
 **Sylvain Birukoff**
+
 **Louis Chaumier**
